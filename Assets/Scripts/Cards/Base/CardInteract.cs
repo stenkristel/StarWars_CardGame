@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using BaseGame.Interfaces;
 using Player;
+using Unity.VisualScripting;
 using UnityEditor.MemoryProfiler;
 using UnityEngine;
 
@@ -9,14 +10,20 @@ namespace Cards.Base
     public class CardInteract : MonoBehaviour, IInteractable
     {
         public GameObject GameObject => gameObject;
+        [SerializeField] private GameObject hoverHighlight;
+        [SerializeField] private GameObject selectedHighlight;
+
+        private PlayerInteraction _playerInteraction;
+        public PlayerInteraction PlayerInteraction
+        {
+            get => _playerInteraction;
+            set => _playerInteraction = value;
+        }
+
         
         private bool _selected;
-        private PlayerInteraction _playerInteraction;
-        public PlayerInteraction PlayerInteraction { get; set; }
-        public bool Selectable => true;
 
-
-        private bool Selected
+        public bool Selected
         {
             get => _selected;
             set
@@ -27,16 +34,23 @@ namespace Cards.Base
                 if (value)
                 {
                     OnSelected();
+                    return;
                 }
-                
+                OnDeSelect();
             }
         }
 
+        
         public void OnHover()
         {
-            
+            hoverHighlight.SetActive(true);
         }
-
+        public void OnStopHover()
+        {
+            hoverHighlight.SetActive(false);
+        }
+        
+        
         public void Interact()
         {
             if (Input.GetKeyDown(KeyCode.Mouse0))
@@ -44,22 +58,25 @@ namespace Cards.Base
                 Selected = !Selected;
             }
         }
-        
-
         private void OnSelected()
         {
-            _playerInteraction.IsSelected = true;
+            OnStopHover();
+            selectedHighlight.SetActive(true);
         }
 
-        private void Update()
+        private void OnDeSelect()
         {
-            if (!Selected) return;
-            if (PlayerInteraction.Interactable.GameObject.CompareTag("row"))
-            {
-                Debug.Log("Row!");
-            }
+            selectedHighlight.SetActive(false);
         }
-        
+
+        public bool CheckForSelectedInteraction(IInteractable interactableObject)
+        {
+            if (interactableObject.GameObject.CompareTag("row")) return true;
+            if (interactableObject.GameObject == gameObject) return true;
+            return false;
+        }
+
+
         public void Play()
         {
             

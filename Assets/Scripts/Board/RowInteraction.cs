@@ -8,9 +8,10 @@ namespace Board
     public class RowInteraction : MonoBehaviour, IInteractable
     {
         public GameObject GameObject => gameObject;
-    
-        private bool _isSelectable = false;
-        public bool IsSelectable => _isSelectable;
+
+        public bool Selected => false;
+
+        public bool CheckForSelectedInteraction(IInteractable interactableObject){return false;}
 
         public bool Selectable => false;
         public PlayerInteraction PlayerInteraction { get; set; }
@@ -18,9 +19,13 @@ namespace Board
 
         public UnityEvent interact = new UnityEvent();
         public UnityEvent<GameObject> interacts = new UnityEvent<GameObject>();
+
+        public void OnStopHover()
+        {
+        }
+
         public void OnHover()
         {
-            
         }
 
         public void Interact()
