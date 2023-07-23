@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 using Player;
 using UnityEngine;
@@ -11,7 +12,9 @@ namespace BaseGame.Interfaces
         void OnHover();
         void Interact();
         void OnStopHover();
-        bool Selected { get; }
+        void OnSelectedInteract(IInteractable interactedObject);
+        bool IsSelected { get; set; }
+        bool IsOnlySelectableByObject { get; }
         bool CheckForSelectedInteraction(IInteractable interactableObject);
     }
 }

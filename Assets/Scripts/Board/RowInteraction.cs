@@ -9,16 +9,11 @@ namespace Board
     {
         public GameObject GameObject => gameObject;
 
-        public bool Selected => false;
+        private bool _selected;
+        public bool IsSelected { get; set; }
+        public bool IsOnlySelectableByObject => true;
 
         public bool CheckForSelectedInteraction(IInteractable interactableObject){return false;}
-
-        public bool Selectable => false;
-        public PlayerInteraction PlayerInteraction { get; set; }
-
-
-        public UnityEvent interact = new UnityEvent();
-        public UnityEvent<GameObject> interacts = new UnityEvent<GameObject>();
 
         public void OnStopHover()
         {
@@ -28,9 +23,15 @@ namespace Board
         {
         }
 
+        public void OnSelectedInteract(IInteractable interactedObject)
+        {
+        }
         public void Interact()
         {
-            if (Input.GetKeyDown(KeyCode.Mouse0)) interacts.Invoke(gameObject);
+            if (Input.GetKeyDown(KeyCode.Mouse0))
+            {
+                IsSelected = !IsSelected;
+            }
         }
     }
 }

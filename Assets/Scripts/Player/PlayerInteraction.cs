@@ -8,21 +8,44 @@ namespace Player
 {
     public class PlayerInteraction : MonoBehaviour
     {
-        private IInteractable _interactableObject;
+        [SerializeField] private IInteractable _interactableObject;
 
-        private IInteractable _selected;
-        public IInteractable SelectedObject { get; set; }
+        [SerializeField] private IInteractable _selectedObject;
+        public IInteractable SelectedObject
+        {
+            get => _selectedObject;
+            set
+            {
+                if (value == null) _isSelected = false;
+                _selectedObject = value;
+            }
+        }
+
+        private bool _isSelected;
 
         private void Update()
         {
             _interactableObject = CheckInteractable();
             if (_interactableObject == null) return;
-            if (_interactableObject.Selected) //looks if the interactable object has been selected
+            if (_interactableObject.IsSelected) //looks if the interactable object has been selected
+            {
+                if (_isSelected && _interactableObject != SelectedObject)
+                {
+                    SelectedObject.OnSelectedInteract(_interactableObject);
+                    SelectedObject = null;
+                    return;
+                }
+
+                _isSelected = true;
+            }
+
+            if (_isSelected)
             {
                 SelectedInteract();
                 return;
             }
-            Interact();
+            
+            Interact(!_interactableObject.IsOnlySelectableByObject);
         }
 
         private IInteractable CheckInteractable()
@@ -42,9 +65,9 @@ namespace Player
             return interactable;
         }
 
-        private void Interact()
+        private void Interact(bool isSelectable)
         {
-            _interactableObject.Interact();
+            if (isSelectable)_interactableObject.Interact();
             _interactableObject.OnHover();
             Debug.Log("CAN INTERACT");
         }
@@ -52,7 +75,7 @@ namespace Player
         private void SelectedInteract()
         {
             SelectedObject ??= _interactableObject; //Saves the selected object separately from the interactable object
-            if (SelectedObject.CheckForSelectedInteraction(_interactableObject)) _interactableObject.OnHover(); //Sees if the selected object can interact with the object the player is hovering on
+            if (SelectedObject.CheckForSelectedInteraction(_interactableObject)) Interact(true); //Sees if the selected object can interact with the object the player is hovering on
         }
     }
 }

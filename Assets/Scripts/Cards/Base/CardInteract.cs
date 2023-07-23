@@ -4,33 +4,27 @@ using Player;
 using Unity.VisualScripting;
 using UnityEditor.MemoryProfiler;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Cards.Base
 {
     public class CardInteract : MonoBehaviour, IInteractable
     {
         public GameObject GameObject => gameObject;
+        public bool IsOnlySelectableByObject => false;
         [SerializeField] private GameObject hoverHighlight;
         [SerializeField] private GameObject selectedHighlight;
-
         private PlayerInteraction _playerInteraction;
-        public PlayerInteraction PlayerInteraction
-        {
-            get => _playerInteraction;
-            set => _playerInteraction = value;
-        }
-
         
-        private bool _selected;
+        [SerializeField] private bool isSelected;
+        [SerializeField] private float scaleChange;
 
-        public bool Selected
+        public bool IsSelected
         {
-            get => _selected;
+            get => isSelected;
             set
             {
-                _selected = value;
-                Vector3 scaleChange = _selected ? new Vector3(0.2f, 0.2f, 0) : new Vector3(-0.2f, -0.2f, 0);
-                gameObject.transform.localScale += scaleChange;
+                isSelected = value;
                 if (value)
                 {
                     OnSelected();
@@ -40,7 +34,6 @@ namespace Cards.Base
             }
         }
 
-        
         public void OnHover()
         {
             hoverHighlight.SetActive(true);
@@ -55,18 +48,20 @@ namespace Cards.Base
         {
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
-                Selected = !Selected;
+                IsSelected = !IsSelected;
             }
         }
         private void OnSelected()
         {
             OnStopHover();
             selectedHighlight.SetActive(true);
+            ChangeObjectScale(scaleChange);
         }
 
         private void OnDeSelect()
         {
             selectedHighlight.SetActive(false);
+            ChangeObjectScale(-scaleChange);
         }
 
         public bool CheckForSelectedInteraction(IInteractable interactableObject)
@@ -75,10 +70,23 @@ namespace Cards.Base
             if (interactableObject.GameObject == gameObject) return true;
             return false;
         }
-
-
-        public void Play()
+        
+        public void OnSelectedInteract(IInteractable interactedObject)
         {
+            Play(interactedObject.GameObject.transform.position);
+            IsSelected = false;
+            interactedObject.IsSelected = false;
+        }
+
+        private void ChangeObjectScale(float scaleChange)
+        {
+            gameObject.transform.localScale += new Vector3(scaleChange, 0, scaleChange);
+        }
+        public void Play(Vector3 playPosition)
+        {
+            Vector3 position = gameObject.transform.position;
+            var newPosition = playPosition;
+            gameObject.transform.position = new Vector3(position.x, newPosition.y + 0.1f, newPosition.z);
             
         }
     }
