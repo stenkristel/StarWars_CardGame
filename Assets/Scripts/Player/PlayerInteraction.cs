@@ -6,77 +6,86 @@ using UnityEngine;
 
 namespace Player
 {
-    public class PlayerInteraction : MonoBehaviour
+    public class PlayerInteraction : BaseCommand
     {
-        [SerializeField] private IInteractable _interactableObject;
+        [SerializeField] private ISelectable _selectedObject;
 
-        [SerializeField] private IInteractable _selectedObject;
-        public IInteractable SelectedObject
+        private bool _isSelected;
+
+        public ISelectable SelectedObject
         {
             get => _selectedObject;
             set
             {
-                if (value == null) _isSelected = false;
+                if (_selectedObject != null) _selectedObject.IsSelected = false; // Update the old selected object
+                _isSelected = value != null;
                 _selectedObject = value;
+                if (_selectedObject != null) _selectedObject.IsSelected = _isSelected; // Update the new selected object
             }
         }
 
-        private bool _isSelected;
-
-        private void Update()
+        public override void Execute()
         {
-            _interactableObject = CheckInteractable();
-            if (_interactableObject == null) return;
-            if (_interactableObject.IsSelected) //looks if the interactable object has been selected
+            GameObject objectOnCursor = GetObjectOnCursor(); //checks if cursor is on a object
+            if (objectOnCursor == null)
             {
-                if (_isSelected && _interactableObject != SelectedObject)
+                SelectedObject =
+                    null; //if you click on nothing, while having something selected, it is no longer selected
+                return;
+            }
+
+            if (_isSelected) //Is there a object selected?
+            {
+                if (SelectedObject
+                    .IsInteractableWith(
+                        objectOnCursor)) //Yes! Can the selected object interact with the clicked object?
                 {
-                    SelectedObject.OnSelectedInteract(_interactableObject);
+                    SelectedObject.SelectedInteractWith(objectOnCursor); //Yes! Interact with it!
                     SelectedObject = null;
                     return;
                 }
 
-                _isSelected = true;
-            }
-
-            if (_isSelected)
-            {
-                SelectedInteract();
+                SelectedObject = null; //No! remove the selected object!
                 return;
             }
-            
-            Interact(!_interactableObject.IsOnlySelectableByObject);
+
+            ISelectable selectable = GetSelectable(objectOnCursor); //gets ISelectable from the clicked GameObject
+            if (selectable != null) //can it be selected?
+            {
+                SelectedObject = selectable;
+                return;
+            }
+
+            //No! Maybe it can be interacted with?
+            IInteractable
+                interactable = GetInteractable(objectOnCursor); //gets IInteractable from the clicked GameObject
+            if (interactable != null) //can it be interacted?
+            {
+                interactable.Interact(); //Yes? interact with it!
+                return;
+            }
+            //No? welp, then nothing I guess
         }
 
-        private IInteractable CheckInteractable()
-        {
-            IInteractable interactable = CastRayToInteractable();
-            if (interactable != _interactableObject && _interactableObject != null) _interactableObject.OnStopHover();
-            return interactable;
-        }
-
-        private IInteractable CastRayToInteractable() //Looks if the cursor is on a object it can interact with and save the interactable object
+        private GameObject GetObjectOnCursor()
         {
             Ray screenToCursorRay = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (!Physics.Raycast(screenToCursorRay, out var hitInfo)) return null;
-            
+
             var hitObject = hitInfo.collider.gameObject;
-            var interactable = hitObject.GetComponent<IInteractable>();
-            return interactable;
+            return hitObject;
         }
 
-        private void Interact(bool isSelectable)
+        private ISelectable GetSelectable(GameObject objectOnCursor)
         {
-            if (isSelectable)_interactableObject.Interact();
-            _interactableObject.OnHover();
-            Debug.Log("CAN INTERACT");
+            var selectable = objectOnCursor.GetComponent<ISelectable>();
+            return selectable;
         }
-        
-        private void SelectedInteract()
+
+        private IInteractable GetInteractable(GameObject objectOnCursor)
         {
-            SelectedObject ??= _interactableObject; //Saves the selected object separately from the interactable object
-            if (SelectedObject.CheckForSelectedInteraction(_interactableObject)) Interact(true); //Sees if the selected object can interact with the object the player is hovering on
+            var interactable = objectOnCursor.GetComponent<IInteractable>();
+            return interactable;
         }
     }
 }
-

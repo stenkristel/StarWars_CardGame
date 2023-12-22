@@ -1,93 +1,63 @@
+using System;
 using System.Collections.Generic;
 using BaseGame.Interfaces;
-using Player;
-using Unity.VisualScripting;
-using UnityEditor.MemoryProfiler;
 using UnityEngine;
 using UnityEngine.Serialization;
 
 namespace Cards.Base
 {
-    public class CardInteract : MonoBehaviour, IInteractable
+    public class CardInteract : MonoBehaviour, ISelectable
     {
-        public GameObject GameObject => gameObject;
-        public bool IsOnlySelectableByObject => false;
-        [SerializeField] private GameObject hoverHighlight;
         [SerializeField] private GameObject selectedHighlight;
-        private PlayerInteraction _playerInteraction;
-        
-        [SerializeField] private bool isSelected;
-        [SerializeField] private float scaleChange;
+        [SerializeField] private Vector3 selectedScaleChange;
+        [SerializeField] private List<string> interactableGameObjects;
+        private bool _isSelected;
 
         public bool IsSelected
         {
-            get => isSelected;
+            get => _isSelected;
             set
             {
-                isSelected = value;
-                if (value)
-                {
-                    OnSelected();
-                    return;
-                }
-                OnDeSelect();
+                _isSelected = value;
+                OnSelectChange();
             }
         }
 
-        public void OnHover()
+        public bool IsInteractableWith(GameObject gameObject)
         {
-            hoverHighlight.SetActive(true);
-        }
-        public void OnStopHover()
-        {
-            hoverHighlight.SetActive(false);
-        }
-        
-        
-        public void Interact()
-        {
-            if (Input.GetKeyDown(KeyCode.Mouse0))
+            foreach (var interactableObject in interactableGameObjects)
             {
-                IsSelected = !IsSelected;
+                if (gameObject.CompareTag(interactableObject)) return true;
             }
+
+            return false;
         }
-        private void OnSelected()
+
+
+        public void OnSelectChange()
         {
-            OnStopHover();
-            selectedHighlight.SetActive(true);
+            selectedHighlight.SetActive(_isSelected);
+            Vector3 scaleChange = _isSelected ? selectedScaleChange : -selectedScaleChange;
             ChangeObjectScale(scaleChange);
         }
 
-        private void OnDeSelect()
+        public void SelectedInteractWith(GameObject gameObject)
         {
-            selectedHighlight.SetActive(false);
-            ChangeObjectScale(-scaleChange);
-        }
-
-        public bool CheckForSelectedInteraction(IInteractable interactableObject)
-        {
-            if (interactableObject.GameObject.CompareTag("row")) return true;
-            if (interactableObject.GameObject == gameObject) return true;
-            return false;
+            if (gameObject.CompareTag("row")) Play(gameObject.transform.position);
         }
         
-        public void OnSelectedInteract(IInteractable interactedObject)
-        {
-            Play(interactedObject.GameObject.transform.position);
-            IsSelected = false;
-            interactedObject.IsSelected = false;
-        }
-
-        private void ChangeObjectScale(float scaleChange)
-        {
-            gameObject.transform.localScale += new Vector3(scaleChange, 0, scaleChange);
-        }
-        public void Play(Vector3 playPosition)
+        private void Play(Vector3 playPosition)
         {
             Vector3 position = gameObject.transform.position;
             var newPosition = playPosition;
             gameObject.transform.position = new Vector3(position.x, newPosition.y + 0.1f, newPosition.z);
-            
+
         }
+
+        private void ChangeObjectScale(Vector3 scaleChange)
+        {
+            gameObject.transform.localScale += scaleChange;
+        }
+    
     }
 }
