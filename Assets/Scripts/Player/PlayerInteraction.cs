@@ -8,11 +8,10 @@ namespace Player
 {
     public class PlayerInteraction : BaseCommand
     {
-        [SerializeField] private ISelectable _selectedObject;
-
+        private ISelectable _selectedObject;
         private bool _isSelected;
 
-        public ISelectable SelectedObject
+        private ISelectable SelectedObject
         {
             get => _selectedObject;
             set
