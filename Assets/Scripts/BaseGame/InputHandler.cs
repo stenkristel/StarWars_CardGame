@@ -1,35 +1,37 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class InputHandler : MonoBehaviour
+namespace BaseGame
 {
-    [Serializable]
-    public struct KeyBinding
+    public class InputHandler : MonoBehaviour
     {
-        public KeyCode keyCode;
-        public BaseCommand command;
-    }
-
-    [SerializeField] private List<KeyBinding> bindings;
-
-    private void Update()
-    {
-        DetectInput();
-    }
-
-    private void DetectInput()
-    {
-        if (!Input.anyKey) return;
-        for (int i = 0; i < bindings.Count; i++)
+        [Serializable]
+        public struct KeyBinding
         {
-            var keyBinding = bindings.ElementAt(i);
-            if (Input.GetKeyDown(keyBinding.keyCode))
+            public KeyCode keyCode;
+            public BaseCommand command;
+        }
+
+        [SerializeField] private List<KeyBinding> bindings;
+
+        private void Update()
+        {
+            DetectInput();
+        }
+
+        private void DetectInput()
+        {
+            if (!Input.anyKey) return;
+            for (int i = 0; i < bindings.Count; i++)
             {
-                BaseCommand command = keyBinding.command;
-                command.Execute();
+                var keyBinding = bindings.ElementAt(i);
+                if (Input.GetKeyDown(keyBinding.keyCode))
+                {
+                    BaseCommand command = keyBinding.command;
+                    command.Execute();
+                }
             }
         }
     }

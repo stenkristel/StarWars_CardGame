@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using BaseGame;
 using BaseGame.Interfaces;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -8,6 +9,8 @@ namespace Player
 {
     public class PlayerInteraction : BaseCommand
     {
+        private HoverChecker _hoverChecker;
+        private HoverChecker HoverChecker => _hoverChecker ??= GetComponent<HoverChecker>();
         private ISelectable _selectedObject;
         private bool _isSelected;
 
@@ -25,7 +28,7 @@ namespace Player
 
         public override void Execute()
         {
-            GameObject objectOnCursor = GetObjectOnCursor(); //checks if cursor is on a object
+            GameObject objectOnCursor = HoverChecker.HoveredGameObject; //checks if cursor is on a object
             if (objectOnCursor == null)
             {
                 SelectedObject =
@@ -65,16 +68,7 @@ namespace Player
             }
             //No? welp, then nothing I guess
         }
-
-        private GameObject GetObjectOnCursor()
-        {
-            Ray screenToCursorRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (!Physics.Raycast(screenToCursorRay, out var hitInfo)) return null;
-
-            var hitObject = hitInfo.collider.gameObject;
-            return hitObject;
-        }
-
+        
         private ISelectable GetSelectable(GameObject objectOnCursor)
         {
             var selectable = objectOnCursor.GetComponent<ISelectable>();
